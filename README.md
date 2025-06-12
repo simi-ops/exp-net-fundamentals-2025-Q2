@@ -1,13 +1,32 @@
-# exp-net-fundamentals-2025-Q2
+# VPC Deployment Project
 
-### VPC Settings
+This project deploys a basic AWS VPC with one public and one private subnet using CloudFormation.
 
-- VPC IPv4 CIDR Block: 10.200.123.0/24
-- IPv6 CIDR Block: no
-- Number of AZs: 1
-- Number of public subnet: 1
-- Number of Private subnets: 1
-- Nat Gateways: none
-- VPC Endpoints: None
-- DNS Options: Enable DNS Hostnames
-- DNS Options: Enable DNS Hostnames
+## Architecture
+
+- VPC with CIDR block 10.200.123.0/24
+- Public subnet (10.200.123.0/26) with Internet Gateway access
+- Private subnet (10.200.123.64/26)
+- Route tables for both subnets
+
+## Deployment
+
+1. Ensure AWS CLI is configured with appropriate credentials
+2. Run the deployment script:
+
+```bash
+./bin/deploy
+```
+
+## Configuration
+
+Edit the variables in `bin/deploy` to customize:
+- AWS Region
+- Availability Zone
+- CIDR blocks
+- Stack name
+![Image of a VPC deployed by the CloudFormation Stack](assets/vpc.png)
+## Files
+
+- `vpc.yaml` - CloudFormation template
+- `bin/deploy` - Deployment script
