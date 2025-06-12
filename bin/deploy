@@ -1,0 +1,32 @@
+#!/bin/bash
+
+# Define your CloudFormation stack name
+STACK_NAME="MyVPCStack"
+
+TEMPLATE_FILE="vpc.yaml"
+
+REGION="us-east-1"
+AVAILABILITY_ZONE="us-east-1a"
+VPC_CIDR="10.200.123.0/24"
+PUBLIC_SUBNET_CIDR="10.200.123.0/26"
+PRIVATE_SUBNET_CIDR="10.200.123.64/26"
+
+echo "Deploying CloudFormation stack: $STACK_NAME..."
+
+aws cloudformation deploy \
+  --stack-name "$STACK_NAME" \
+  --template-file "$TEMPLATE_FILE" \
+  --parameter-overrides \
+    VPCCIDR="$VPC_CIDR" \
+    PublicSubnetCIDR="$PUBLIC_SUBNET_CIDR" \
+    PrivateSubnetCIDR="$PRIVATE_SUBNET_CIDR" \
+    AvailabilityZone="$AVAILABILITY_ZONE" \
+  --capabilities CAPABILITY_IAM \
+  --region "$REGION"
+
+if [ $? -eq 0 ]; then
+  echo "CloudFormation stack '$STACK_NAME' deployment initiated successfully."
+  echo "You can monitor its status in the AWS CloudFormation console."
+else
+  echo "Error: CloudFormation stack '$STACK_NAME' deployment failed."
+fi

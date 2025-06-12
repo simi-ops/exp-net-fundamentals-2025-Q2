@@ -1,0 +1,133 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: CloudFormation template for a basic VPC with one public and one private subnet.
+
+Parameters:
+  VPCCIDR:
+    Type: String
+    Default: 10.200.123.0/24
+    Description: CIDR block for the VPC.
+
+  PublicSubnetCIDR:
+    Type: String
+    Default: 10.200.123.0/26
+    Description: CIDR block for the public subnet. Must be a subset of the VPC CIDR.
+
+  PrivateSubnetCIDR:
+    Type: String
+    Default: 10.200.123.64/26
+    Description: CIDR block for the private subnet. Must be a subset of the VPC CIDR.
+
+  AvailabilityZone:
+    Type: AWS::EC2::AvailabilityZone::Name
+    Description: The Availability Zone to deploy resources into.
+    ConstraintDescription: Must be a valid Availability Zone for your selected region.
+
+Resources:
+  # VPC Resource
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !Ref VPCCIDR
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      Tags:
+        - Key: Name
+          Value: MyVPC
+
+  # Internet Gateway (for public subnet access to the internet)
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: MyVPC-IGW
+
+  # Attach Internet Gateway to VPC
+  VPCGatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref VPC
+      InternetGatewayId: !Ref InternetGateway
+
+  # Public Subnet
+  PublicSubnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: !Ref PublicSubnetCIDR
+      AvailabilityZone: !Ref AvailabilityZone
+      MapPublicIpOnLaunch: true # Automatically assign public IPs to instances launched in this subnet
+      Tags:
+        - Key: Name
+          Value: MyVPC-PublicSubnet
+
+  # Private Subnet
+  PrivateSubnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: !Ref PrivateSubnetCIDR
+      AvailabilityZone: !Ref AvailabilityZone
+      Tags:
+        - Key: Name
+          Value: MyVPC-PrivateSubnet
+
+  # Route Table for Public Subnet
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: MyVPC-PublicRT
+
+  # Route for Public Subnet to Internet Gateway
+  PublicRoute:
+    Type: AWS::EC2::Route
+    DependsOn: VPCGatewayAttachment # Ensure IGW is attached before creating route
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0 # Default route to all internet traffic
+      GatewayId: !Ref InternetGateway
+
+  # Associate Public Subnet with Public Route Table
+  PublicSubnetRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnet
+      RouteTableId: !Ref PublicRouteTable
+
+  # Route Table for Private Subnet
+  PrivateRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: MyVPC-PrivateRT
+
+  # Associate Private Subnet with Private Route Table
+  PrivateSubnetRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PrivateSubnet
+      RouteTableId: !Ref PrivateRouteTable
+
+Outputs:
+  VPCId:
+    Description: The ID of the newly created VPC.
+    Value: !Ref VPC
+    Export:
+      Name: MyVPCId
+
+  PublicSubnetId:
+    Description: The ID of the Public Subnet.
+    Value: !Ref PublicSubnet
+    Export:
+      Name: MyVPC-PublicSubnetId
+
+  PrivateSubnetId:
+    Description: The ID of the Private Subnet.
+    Value: !Ref PrivateSubnet
+    Export:
+      Name: MyVPC-PrivateSubnetId
